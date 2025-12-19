@@ -28,10 +28,37 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Instabuy Desafio'),
-        backgroundColor: Colors.green,
+        // Substituimos o Text simples por uma Row (Linha)
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center, // Centraliza no meio da barra
+          mainAxisSize: MainAxisSize.min, // Faz a linha ocupar só o espaço necessário (senão ela estica tudo)
+          children: [
+            // 1. A IMAGEM (LOGO)
+            Image.asset(
+              'assets/logo.png',
+              height: 30, // Altura para caber na barra
+              fit: BoxFit.contain,
+            ),
+
+            const SizedBox(width: 10), // Um espacinho entre a logo e o texto
+
+            // 2. O TEXTO
+            const Text(
+              'Instabuy',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white, // Texto branco para contrastar
+              ),
+            ),
+          ],
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.orange, // A cor de fundo da barra
+        iconTheme: const IconThemeData(color: Colors.white), // Cor dos ícones (voltar, menu) brancos
       ),
+
       // Substitua todo o "body: FutureBuilder..." por isso:
       body: FutureBuilder<Map<String, dynamic>>(
         future: _futureDados,
@@ -56,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Padding(
-                        padding: EdgeInsets.all(16.0),
+                        padding: EdgeInsets.all(20.0),
                         child: Text('Destaques', style: TextStyle(fontSize: 22,
                             fontWeight: FontWeight.bold)),
                       ),
@@ -64,15 +91,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 180,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: banners.length,
                           itemBuilder: (context, index) {
+                            // 2. O TRUQUE MÁGICO DO CICLO (%)
+                            // O index vai crescer pra sempre (0, 1, 2, 3, 4, 5...)
+                            // O % faz ele voltar pro zero quando atinge o tamanho da lista.
+                            // Exemplo com 3 banners: 0, 1, 2 -> 0, 1, 2 -> 0...
+                            final int bannerIndex = index % banners.length;
                             return Padding(
                               padding: const EdgeInsets.only(
                                   left: 16.0, right: 8.0),
-                              child: ClipRRect( // Arredonda as pontas da imagem
+                              child: ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
                                 child: Image.network(
-                                  banners[index].fullImageUrl,
+                                  banners[bannerIndex].fullImageUrl,
                                   width: 320,
                                   fit: BoxFit.cover,
                                 ),
@@ -81,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ),
+
                       const Padding(
                         padding: EdgeInsets.all(16.0),
                         child: Text('Ofertas Imperdíveis', style: TextStyle(

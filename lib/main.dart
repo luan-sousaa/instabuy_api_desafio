@@ -14,7 +14,6 @@ class MyApp extends StatelessWidget {
       title: 'Desafio Instabuy',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.green,
         useMaterial3: true,
       ),
       home: const HomeScreen(), // <--- Aponta para nossa tela nova

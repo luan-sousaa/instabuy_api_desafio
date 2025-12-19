@@ -18,7 +18,7 @@ class ProductCard extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: <Widget>[
             // 1. IMAGEM
             Expanded(
               child: Center(
@@ -40,11 +40,12 @@ class ProductCard extends StatelessWidget {
             // 2. NOME DO PRODUTO
             Text(
               product.name,
-              style: const TextStyle(
+              style: TextStyle(
+                color: Colors.grey[600],
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
 
@@ -53,11 +54,28 @@ class ProductCard extends StatelessWidget {
             // 3. PREÇO
             Text(
               'R\$ ${product.price.toStringAsFixed(2).replaceAll('.', ',')}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: Colors.black87,
               ),
+            ),
+            //botao de comprar
+            ElevatedButton(onPressed: () {  },
+                style:
+                ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.orange[400],
+                  elevation: 0,
+                  side: BorderSide(color: Colors.orange, width: 2.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+
+                child: Center(
+                    child: Text('Comprar', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                )
             ),
           ],
         ),
