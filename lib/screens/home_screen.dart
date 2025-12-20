@@ -3,6 +3,7 @@ import '../models/banner_model.dart';
 import '../models/product_model.dart';
 import '../services/instabuy_service.dart';
 import '../widgets/product_card.dart';
+import 'cart_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 2. Criamos uma variável para guardar a "promessa" dos dados
   late Future<Map<String, dynamic>> _futureDados;
+  int _bannerAtual = 0; // Vai guardar qual banner está aparecendo (0, 1, 2...)
 
   @override
   void initState() {
@@ -38,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // 1. A IMAGEM (LOGO)
             Image.asset(
               'assets/logo.png',
-              height: 30, // Altura para caber na barra
+              height: 40, // Altura para caber na barra
               fit: BoxFit.contain,
             ),
 
@@ -46,10 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // 2. O TEXTO
             const Text(
-              'Instabuy',
+              'Instabuy Market',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.white, // Texto branco para contrastar
+                fontSize: 25,
+                color: Colors.white,
               ),
             ),
           ],
@@ -59,7 +62,22 @@ class _HomeScreenState extends State<HomeScreen> {
         iconTheme: const IconThemeData(color: Colors.white), // Cor dos ícones (voltar, menu) brancos
       ),
 
-      // Substitua todo o "body: FutureBuilder..." por isso:
+      floatingActionButton: Padding(
+        // Aqui definimos o quanto ele sobe
+        padding: const EdgeInsets.only(bottom: 70.0, right: 5.0),
+
+        child: FloatingActionButton(
+          backgroundColor: Colors.orange,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CartScreen()),
+            );
+          },
+          child: const Icon(Icons.shopping_cart, color: Colors.white),
+        ),
+      ),
+
       body: FutureBuilder<Map<String, dynamic>>(
         future: _futureDados,
         builder: (context, snapshot) {
@@ -77,35 +95,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
             return CustomScrollView(
               slivers: [
-                // 1. ÁREA DOS BANNERS (Fica no topo)
+                // 1. ÁREA DOS BANNERS
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: Text('Destaques', style: TextStyle(fontSize: 22,
-                            fontWeight: FontWeight.bold)),
+                        padding: EdgeInsets.all(16.0),
+                        child: Text('Destaques', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                       ),
+
+                      // O CARROSSEL (PageView)
                       SizedBox(
                         height: 180,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
+                        child: PageView.builder(
+                          // onPageChanged: Avisa quando mudou de imagem
+                          onPageChanged: (index) {
+                            setState(() {
+                              _bannerAtual = index;
+                            });
+                          },
+                          itemCount: banners.length,
                           itemBuilder: (context, index) {
-                            // 2. O TRUQUE MÁGICO DO CICLO (%)
-                            // O index vai crescer pra sempre (0, 1, 2, 3, 4, 5...)
-                            // O % faz ele voltar pro zero quando atinge o tamanho da lista.
-                            // Exemplo com 3 banners: 0, 1, 2 -> 0, 1, 2 -> 0...
-                            final int bannerIndex = index % banners.length;
                             return Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 16.0, right: 8.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
-                                  banners[bannerIndex].fullImageUrl,
-                                  width: 320,
+                                  banners[index].fullImageUrl,
                                   fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey[300],
+                                      child: const Center(child: CircularProgressIndicator()),
+                                    );
+                                  },
                                 ),
                               ),
                             );
@@ -113,10 +138,31 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
 
+                      const SizedBox(height: 10), // Espaço entre banner e bolinhas
+
+                      // AS BOLINHAS INDICADORAS
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(banners.length, (index) {
+                          // Verifica se essa bolinha é a atual
+                          bool isSelected = _bannerAtual == index;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: isSelected ? 24 : 8, // Se selecionado fica esticado, se não, bolinha
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.amberAccent : Colors.grey[400], // Verde ou Cinza
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        }),
+                      ),
+
                       const Padding(
                         padding: EdgeInsets.all(16.0),
-                        child: Text('Ofertas Imperdíveis', style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold)),
+                        child: Text('Ofertas Imperdíveis', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
