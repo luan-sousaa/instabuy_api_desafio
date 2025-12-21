@@ -86,7 +86,7 @@ class _CartScreenState extends State<CartScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {},
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange[400]),
                     child: const Text("Finalizar Pedido", style: TextStyle(color: Colors.white, fontSize: 18)),
                   ),
                 )

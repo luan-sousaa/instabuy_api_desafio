@@ -33,22 +33,25 @@ class ProductCard extends StatelessWidget {
             // 1. IMAGEM
             Expanded(
               child: Center(
-                child: Image.network(
-                  product.fullImageUrl,
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                  },
-                  errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.broken_image, color: Colors.grey, size: 50),
+                child: Hero(
+                  tag: product.id, // o id único para o Flutter saber qual imagem voar
+                  child: Image.network(
+                    product.fullImageUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.broken_image, color: Colors.grey, size: 50),
+                  ),
                 ),
               ),
             ),
 
             const SizedBox(height: 3),
 
-            // 3. PREÇO (LÓGICA AJUSTADA)
+            // 3. PREÇO
             if (product.isPromo)
             // Se tiver promoção, usamos ROW para colocar lado a lado
               Row(

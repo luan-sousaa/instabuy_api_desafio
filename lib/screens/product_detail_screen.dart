@@ -44,20 +44,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               height: 300,
               width: double.infinity,
               color: Colors.white,
-              child: PageView.builder(
-                itemCount: widget.product.images.isEmpty ? 1 : widget.product.images.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _imagemAtual = index;
-                  });
-                },
-                itemBuilder: (context, index) {
-                  return Image.network(
-                    widget.product.getImageUrl(index),
-                    fit: BoxFit.contain, // Mostra o produto inteiro sem cortar
-                  );
-                },
-              ),
+                child: PageView.builder(
+                  itemCount: widget.product.images.isEmpty ? 1 : widget.product.images.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _imagemAtual = index;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    // LÓGICA DO HERO:
+                    // Se for a primeira imagem (index 0), aplicamos a animação.
+                    if (index == 0) {
+                      return Hero(
+                        tag: widget.product.id, // A mesma TAG do Card (Importante!)
+                        child: Image.network(
+                          widget.product.getImageUrl(index),
+                          fit: BoxFit.contain,
+                        ),
+                      );
+                    } else {
+                      // Se forem as outras fotos da galeria, mostramos normal (sem Hero)
+                      return Image.network(
+                        widget.product.getImageUrl(index),
+                        fit: BoxFit.contain,
+                      );
+                    }
+                  },
+                ),
             ),
 
             // 2. BOLINHAS INDICADORAS (Só mostra se tiver mais de 1 foto)
