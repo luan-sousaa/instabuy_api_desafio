@@ -19,7 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // 2. Criamos uma variável para guardar a "promessa" dos dados
   late Future<Map<String, dynamic>> _futureDados;
   int _bannerAtual = 0; // Vai guardar qual banner está aparecendo (0, 1, 2...)
-
+  //variavel de busca
+  String _busca = "";
   @override
   void initState() {
     super.initState();
@@ -91,107 +92,152 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (snapshot.hasData) {
             final banners = snapshot.data!['banners'] as List<BannerModel>;
-            final products = snapshot.data!['products'] as List<ProductModel>;
+            final allProducts = snapshot.data!['products'] as List<ProductModel>;
+
+            // 1. LÓGICA DE FILTRAGEM (Case Insensitive)
+            final productsFiltrados = allProducts.where((produto) {
+              return produto.name.toLowerCase().contains(_busca.toLowerCase());
+            }).toList();
 
             return CustomScrollView(
               slivers: [
-                // 1. ÁREA DOS BANNERS
+                // ÁREA SUPERIOR (Busca + Banners)
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('Destaques', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                      ),
 
-                      // O CARROSSEL (PageView)
-                      SizedBox(
-                        height: 180,
-                        child: PageView.builder(
-                          // onPageChanged: Avisa quando mudou de imagem
-                          onPageChanged: (index) {
+                      // 2. A BARRA DE PESQUISA
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: TextField(
+                          onChanged: (textoDigitado) {
                             setState(() {
-                              _bannerAtual = index;
+                              _busca = textoDigitado;
                             });
                           },
-                          itemCount: banners.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  banners[index].fullImageUrl,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      color: Colors.grey[300],
-                                      child: const Center(child: CircularProgressIndicator()),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+                          decoration: InputDecoration(
+                            hintText: 'O que você procura hoje?',
+                            prefixIcon: const Icon(Icons.search, color: Colors.orange),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                            contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30), // Borda redondinha
+                              borderSide: BorderSide.none, // Sem linha preta em volta
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: const BorderSide(color: Colors.orange, width: 1),
+                            ),
+                          ),
                         ),
                       ),
 
-                      const SizedBox(height: 10), // Espaço entre banner e bolinhas
+                      // 3. SÓ MOSTRA BANNERS SE NÃO TIVER PESQUISANDO
+                      // (Se a busca for vazia, mostra os banners. Se tiver texto, esconde)
+                      if (_busca.isEmpty) ...[
+                        const Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Text('Destaques', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                        ),
 
-                      // AS BOLINHAS INDICADORAS
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(banners.length, (index) {
-                          // Verifica se essa bolinha é a atual
-                          bool isSelected = _bannerAtual == index;
+                        // SEU CARROSSEL DE BANNERS (O código que já existia)
+                        SizedBox(
+                          height: 140, // Altura ajustada
+                          child: PageView.builder(
+                            onPageChanged: (index) {
+                              setState(() {
+                                _bannerAtual = index;
+                              });
+                            },
+                            itemCount: banners.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    banners[index].fullImageUrl,
+                                    fit: BoxFit.fill,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(color: Colors.grey[300]);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        // BOLINHAS INDICADORAS
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(banners.length, (index) {
+                            bool isSelected = _bannerAtual == index;
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: isSelected ? 24 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: isSelected ? Colors.green : Colors.grey[400],
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            );
+                          }),
+                        ),
 
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            margin: const EdgeInsets.symmetric(horizontal: 4),
-                            width: isSelected ? 24 : 8, // Se selecionado fica esticado, se não, bolinha
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.amberAccent : Colors.grey[400], // Verde ou Cinza
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          );
-                        }),
-                      ),
-
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('Ofertas Imperdíveis', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                      ),
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text('Ofertas Imperdíveis', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                        ),
+                      ] else ...[
+                        // Se tiver pesquisando, mostra um título diferente
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text('Resultados para "$_busca"', style: const TextStyle(fontSize: 18, color: Colors.grey)),
+                        ),
+                      ],
                     ],
                   ),
                 ),
 
-                // 2. O GRID DE PRODUTOS (2 por linha)
-                SliverPadding(
+                // 4. O GRID AGORA USA A LISTA FILTRADA
+                productsFiltrados.isEmpty
+                    ? const SliverToBoxAdapter(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 50),
+                      child: Text("Nenhum produto encontrado 😕"),
+                    ),
+                  ),
+                )
+                    : SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      // <--- AQUI: 2 ITENS POR LINHA
                       childAspectRatio: 0.75,
-                      // Define a altura do cartão (mais alto ou mais quadrado)
                       crossAxisSpacing: 10,
-                      // Espaço lateral entre cartões
-                      mainAxisSpacing: 10, // Espaço vertical entre cartões
+                      mainAxisSpacing: 10,
                     ),
                     delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                        return ProductCard(product: products[index]);
+                        // USA productsFiltrados AO INVÉS DE products
+                        return ProductCard(product: productsFiltrados[index]);
                       },
-                      childCount: products.length,
+                      childCount: productsFiltrados.length,
                     ),
                   ),
                 ),
 
-                // Um espaço no final pra não ficar colado na borda
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)), // Espaço extra no final
               ],
             );
           }
