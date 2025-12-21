@@ -13,7 +13,16 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _imagemAtual = 0; // Para controlar as bolinhas da galeria
+  String _limparTextoHtml(String htmlString) {
+    // 1. Troca tags de quebra de linha (<br>, </p>, </div>) por quebra de linha real (\n)
+    String text = htmlString.replaceAll(RegExp(r'<(br|/p|/div)>'), '\n');
 
+    // 2. Remove todas as outras tags HTML (tudo que estiver entre < e >)
+    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
+
+    // 3. Remove espaços duplicados e espaços extras no começo/fim
+    return text.trim();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,7 +113,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green, // Destaque no preço
+                      color: Colors.black, // Destaque no preço
                     ),
                   ),
 
@@ -121,8 +130,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   // TEXTO DA DESCRIÇÃO
                   Text(
-                    widget.product.description,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700], height: 1.5),
+                      _limparTextoHtml(widget.product.description),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600], height: 1.5),
                   ),
                 ],
               ),
@@ -169,13 +178,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.orange[400],
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text(
+
+            child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center, // Centraliza tudo no meio do botão
+                children: [
+                Icon(Icons.shopping_cart_outlined, color: Colors.white), // O Ícone
+            SizedBox(width: 10), // Um espaço entre o ícone e o texto
+            Text(
               "Adicionar ao Carrinho",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            ]
             ),
           ),
         ),
