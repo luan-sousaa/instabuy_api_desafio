@@ -5,6 +5,9 @@ import '../services/instabuy_service.dart';
 import '../widgets/product_card.dart';
 import 'cart_screen.dart';
 
+/// [HomeScreen] é o ponto de entrada principal da experiência de compra.
+/// Esta classe gerencia a exibição de banners promocionais, busca de produtos
+/// e a listagem geral utilizando uma arquitetura baseada em Slivers para alta performance.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -13,18 +16,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // 1. Instanciamos nosso serviço (o trabalhador)
+  /// Instância do serviço responsável pelas chamadas de API.
   final InstabuyService _service = InstabuyService();
 
-  // 2. Criamos uma variável para guardar a "promessa" dos dados
+  /// [Future] que armazena a resposta da API.
+  /// Definido como uma variável de estado para evitar disparos desnecessários da requisição
+  /// toda vez que o widget for reconstruído (rebuild).
   late Future<Map<String, dynamic>> _futureDados;
-  int _bannerAtual = 0; // Vai guardar qual banner está aparecendo (0, 1, 2...)
-  //variavel de busca
+
+  /// Controla o índice do banner atualmente visível no [PageView].
+  int _bannerAtual = 0;
+
+  /// Estado que armazena a string de busca para filtragem reativa de produtos.
   String _busca = "";
+
   @override
   void initState() {
     super.initState();
-    // 3. Assim que a tela nasce, mandamos buscar os dados
+    /// Inicializa a busca de dados no ciclo de vida correto (initState),
+    /// garantindo que a requisição ocorra apenas uma vez na criação da tela.
     _futureDados = _service.fetchData();
   }
 
@@ -33,21 +43,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // Substituimos o Text simples por uma Row (Linha)
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.center, // Centraliza no meio da barra
-          mainAxisSize: MainAxisSize.min, // Faz a linha ocupar só o espaço necessário (senão ela estica tudo)
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // 1. A IMAGEM (LOGO)
             Image.asset(
               'assets/logo.png',
-              height: 40, // Altura para caber na barra
+              height: 40,
               fit: BoxFit.contain,
             ),
-
-            const SizedBox(width: 10), // Um espacinho entre a logo e o texto
-
-            // 2. O TEXTO
+            const SizedBox(width: 10),
             const Text(
               'Instabuy Market',
               style: TextStyle(
@@ -59,14 +64,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         centerTitle: true,
-        backgroundColor: Colors.orange, // A cor de fundo da barra
-        iconTheme: const IconThemeData(color: Colors.white), // Cor dos ícones (voltar, menu) brancos
+        backgroundColor: Colors.orange,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
 
       floatingActionButton: Padding(
-        // Aqui definimos o quanto ele sobe
         padding: const EdgeInsets.only(bottom: 70.0, right: 5.0),
-
         child: FloatingActionButton(
           backgroundColor: Colors.orange,
           onPressed: () {
@@ -79,6 +82,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
+      /// [FutureBuilder] lida com o consumo da [Future] de forma declarativa.
+      /// Ele reconstrói a UI automaticamente baseada no estado da conexão (espera, erro ou sucesso).
       body: FutureBuilder<Map<String, dynamic>>(
         future: _futureDados,
         builder: (context, snapshot) {
@@ -94,20 +99,23 @@ class _HomeScreenState extends State<HomeScreen> {
             final banners = snapshot.data!['banners'] as List<BannerModel>;
             final allProducts = snapshot.data!['products'] as List<ProductModel>;
 
-            // 1. LÓGICA DE FILTRAGEM (Case Insensitive)
+            /// Implementação de filtragem client-side utilizando métodos funcionais da List.
+            /// Normaliza as strings para 'lowercase' para garantir uma busca case-insensitive.
             final productsFiltrados = allProducts.where((produto) {
               return produto.name.toLowerCase().contains(_busca.toLowerCase());
             }).toList();
 
+            /// O [CustomScrollView] permite a criação de efeitos de rolagem complexos.
+            /// O uso de [Slivers] é uma boa prática de performance, pois renderiza apenas
+            /// o que está visível na viewport (Lazy Loading).
             return CustomScrollView(
               slivers: [
-                // ÁREA SUPERIOR (Busca + Banners)
+                /// [SliverToBoxAdapter] permite injetar widgets comuns (não-slivers)
+                /// dentro do contexto do CustomScrollView.
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
-                      // 2. A BARRA DE PESQUISA
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         child: TextField(
@@ -123,8 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             fillColor: Colors.grey[100],
                             contentPadding: const EdgeInsets.symmetric(vertical: 0),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30), // Borda redondinha
-                              borderSide: BorderSide.none, // Sem linha preta em volta
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
@@ -138,17 +146,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
 
-                      // 3. SÓ MOSTRA BANNERS SE NÃO TIVER PESQUISANDO
-                      // (Se a busca for vazia, mostra os banners. Se tiver texto, esconde)
+                      /// Lógica condicional para alternar entre visibilidade de Banners e Resultados.
                       if (_busca.isEmpty) ...[
                         const Padding(
                           padding: EdgeInsets.all(20.0),
                           child: Text('Destaques', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                         ),
 
-                        // SEU CARROSSEL DE BANNERS (O código que já existia)
+                        /// [PageView.builder] para o carrossel de banners.
+                        /// Otimizado para criar widgets sob demanda conforme o usuário desliza.
                         SizedBox(
-                          height: 140, // Altura ajustada
+                          height: 140,
                           child: PageView.builder(
                             onPageChanged: (index) {
                               setState(() {
@@ -175,7 +183,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        // BOLINHAS INDICADORAS
+
+                        /// Indicadores visuais de paginação (dots).
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(banners.length, (index) {
@@ -198,7 +207,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text('Ofertas Imperdíveis', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                         ),
                       ] else ...[
-                        // Se tiver pesquisando, mostra um título diferente
                         Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Text('Resultados para "$_busca"', style: const TextStyle(fontSize: 18, color: Colors.grey)),
@@ -208,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // 4. O GRID AGORA USA A LISTA FILTRADA
+                /// Gerenciamento de Empty State dentro da arquitetura de Slivers.
                 productsFiltrados.isEmpty
                     ? const SliverToBoxAdapter(
                   child: Center(
@@ -221,6 +229,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     : SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
+                    /// [SliverGridDelegateWithFixedCrossAxisCount] define o layout da grade.
+                    /// Otimizado para scroll infinito e reuso de memória.
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 0.75,
@@ -229,7 +239,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                        // USA productsFiltrados AO INVÉS DE products
                         return ProductCard(product: productsFiltrados[index]);
                       },
                       childCount: productsFiltrados.length,
@@ -237,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 80)), // Espaço extra no final
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             );
           }

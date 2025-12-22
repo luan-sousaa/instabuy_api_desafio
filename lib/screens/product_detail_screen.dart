@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../services/cart_service.dart';
-
+/// Tela de Detalhes do Produto.
+///
+/// Responsável por exibir todas as informações do produto selecionado,
+/// incluindo uma galeria de imagens interativa (Carrosel), descrição completa
+/// e a ação de adicionar ao carrinho.
+///
+/// Implementa a animação [Hero] para criar uma transição fluida entre a listagem e o detalhe.
 class ProductDetailScreen extends StatefulWidget {
   final ProductModel product;
 
@@ -12,7 +18,14 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  int _imagemAtual = 0; // Para controlar as bolinhas da galeria
+  // Índice da imagem atual no carrossel para controlar os indicadores (bolinhas).
+  int _imagemAtual = 0;
+  /// Utilitário interno para sanitização de texto HTML.
+  ///
+  /// A API retorna descrições contendo tags como <br>, <p> e <div>.
+  /// Optamos por usar [RegExp] para limpar essas tags e converter em quebras de linha,
+  /// mantendo a performance alta e evitando a necessidade de pacotes externos pesados
+  /// de renderização HTML para um caso de uso simples.
   String _limparTextoHtml(String htmlString) {
     // 1. Troca tags de quebra de linha (<br>, </p>, </div>) por quebra de linha real (\n)
     String text = htmlString.replaceAll(RegExp(r'<(br|/p|/div)>'), '\n');
@@ -27,7 +40,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // AppBar transparente para dar foco na foto
+      // AppBar limpa para manter o foco visual nas imagens do produto
       appBar: AppBar(
         title: const Text('Detalhes'),
         backgroundColor: Colors.white,
@@ -53,7 +66,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   },
                   itemBuilder: (context, index) {
                     // LÓGICA DO HERO:
-                    // Se for a primeira imagem (index 0), aplicamos a animação.
+                    // Aplicamos o widget Hero APENAS na primeira imagem (index 0).
+                    // Isso conecta visualmente a miniatura da tela anterior com a imagem grande desta tela.
+                    // Não aplicamos nos outros índices para evitar conflito de tags duplicadas.
                     if (index == 0) {
                       return Hero(
                         tag: widget.product.id, // A mesma TAG do Card (Importante!)
@@ -74,6 +89,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             ),
 
             // 2. BOLINHAS INDICADORAS (Só mostra se tiver mais de 1 foto)
+            // Renderização condicional: só exibe se houver mais de uma imagem.
             if (widget.product.images.length > 1)
               Padding(
                 padding: const EdgeInsets.only(top: 10.0),

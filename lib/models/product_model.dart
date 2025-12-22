@@ -1,3 +1,8 @@
+/// Classe que representa a entidade Produto no aplicativo.
+///
+/// Responsável por mapear os dados brutos (JSON) da API para objetos Dart fortemente tipados.
+/// Centraliza regras de negócio fundamentais, como o cálculo de preço promocional
+/// e a construção das URLs das imagens.
 class ProductModel {
   final String id;
   final String name;
@@ -16,12 +21,18 @@ class ProductModel {
     required this.originalPrice,
     required this.isPromo,
   });
-
+  /// Factory Constructor (Padrão Adapter).
+  ///
+  /// Converte o Map JSON vindo da API em uma instância de [ProductModel].
+  /// Realiza tratamento defensivo de dados (Null Safety) e encapsula a lógica
+  /// de escolha de preço (Regular vs Promocional).
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     double precoFinal = 0.0;
     double precoOriginal = 0.0;
     bool emPromocao = false;
-
+    /// LÓGICA DE PRECIFICAÇÃO:
+    /// A API retorna uma lista de 'prices'. Pegamos sempre o primeiro item.
+    /// Se 'promo_price' for maior que 0, consideramos que há uma promoção ativa.
     if (json['prices'] != null && (json['prices'] as List).isNotEmpty) {
       var primeiraOpcao = json['prices'][0];
       double regular = (primeiraOpcao['price'] ?? 0).toDouble();
@@ -41,7 +52,7 @@ class ProductModel {
     return ProductModel(
       id: json['id'] ?? '',
       name: json['name'] ?? 'Produto sem nome',
-      // 1. CAPTURAMOS A LISTA DE IMAGENS
+      // Tratamento para garantir que sempre teremos uma lista, mesmo que vazia.
       images: json['images'] != null
           ? List<String>.from(json['images'])
           : [],

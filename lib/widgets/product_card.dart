@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../services/cart_service.dart';
 import '../screens/product_detail_screen.dart';
-
+/// Widget que representa o cartão individual do produto na listagem (Grid).
+///
+/// Este componente é responsável por exibir o resumo visual do item (imagem, preço, nome)
+/// e gerenciar duas interações críticas de UX:
+/// 1. Navegação para detalhes via [GestureDetector] e animação [Hero].
+/// 2. Adição rápida ao carrinho com feedback visual instantâneo ([SnackBar]).
 class ProductCard extends StatelessWidget {
   final ProductModel product;
 
@@ -10,6 +15,8 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Envolvemos o Card em um GestureDetector para capturar o clique em qualquer área
+    // e navegar para a tela de detalhes
     return GestureDetector(
         onTap: () {
           // Quando clicar, vai para a tela de detalhes
@@ -22,7 +29,7 @@ class ProductCard extends StatelessWidget {
         },
     child: Card(
       color: Colors.white,
-      surfaceTintColor: Colors.white,
+      surfaceTintColor: Colors.white, // Garante que o card fique branco mesmo no Material 3
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -30,18 +37,22 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // 1. IMAGEM
+            // 1. IMAGEM DO PRODUTO COM ANIMAÇÃO HERO
             Expanded(
               child: Center(
+                // O widget Hero cria a animação de transição da imagem entre telas.
+                // A 'tag' deve ser única para identificar qual imagem está "voando".
                 child: Hero(
                   tag: product.id, // o id único para o Flutter saber qual imagem voar
                   child: Image.network(
                     product.fullImageUrl,
                     fit: BoxFit.contain,
+                    // Loading Builder para mostrar progresso enquanto a imagem baixa
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                     },
+                    // Error Builder caso a imagem falhe
                     errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.broken_image, color: Colors.grey, size: 50),
                   ),
@@ -51,13 +62,13 @@ class ProductCard extends StatelessWidget {
 
             const SizedBox(height: 3),
 
-            // 3. PREÇO
+            // 2. EXIBIÇÃO DE PREÇO (Lógica Promocional)
             if (product.isPromo)
-            // Se tiver promoção, usamos ROW para colocar lado a lado
+            // Caso: PROMOÇÃO (Mostra preço antigo riscado + preço novo)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end, // Alinha pela base do texto
                 children: [
-                  // PREÇO NOVO (Preto e Destaque)
+                  // Preço Novo (Destaque)
                   Text(
                     'R\$ ${product.price.toStringAsFixed(2).replaceAll('.', ',')}',
                     style: const TextStyle(
