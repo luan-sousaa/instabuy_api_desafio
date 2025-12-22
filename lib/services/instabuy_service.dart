@@ -14,7 +14,7 @@ class InstabuyService {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
         final data = jsonResponse['data'];
 
-        // 1. Pega os Banners (Isso já estava funcionando)
+        // 1. Pega os Banners
         List<BannerModel> banners = [];
         if (data['banners'] != null) {
           banners = (data['banners'] as List)
@@ -22,7 +22,7 @@ class InstabuyService {
               .toList();
         }
 
-        // 2. Pega os Produtos (AQUI ESTÁ A CORREÇÃO MAGICAMENTE 🪄)
+        // 2. Pega os Produtos
         List<ProductModel> products = [];
 
         if (data['collection_items'] != null) {
